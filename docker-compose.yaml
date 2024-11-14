@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  app-absensi:
+    container_name: app-absensi-container
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 5001:5000
+    env_file:
+      - .env
+    networks:
+      - absensi
+    depends_on:
+      database-absensi:
+        condition: service_healthy
+
+  database-absensi:
+    container_name: database-absensi-container
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 5435:5432
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - absensi
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  absensi:
+
+volumes:
+  pgdata:
